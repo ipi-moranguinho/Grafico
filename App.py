@@ -162,91 +162,6 @@ def abrir_grafico_3(event=None):
     plt.show()
 
 
-# ---------------------------------------------------------------
-# Gráfico 4 — Histogramas de distribuição das 3 variáveis
-# ---------------------------------------------------------------
-def abrir_grafico_4(event=None):
-    fig, axes = plt.subplots(1, 3, figsize=(14, 5),
-                             num='[4] Distribuições das Variáveis')
-    fig.patch.set_facecolor('#0d1117')
-    fig.suptitle('Distribuição das Variáveis — vmCloud Filtrado',
-                 color='#58a6ff', fontsize=13, fontweight='bold')
-
-    configs = [
-        (df['cpu_usage'],       'CPU Usage (%)',         '#58a6ff'),
-        (df['network_traffic'], 'Network Traffic (MB)',  '#3fb950'),
-        (df['execution_time'],  'Execution Time (s)',    '#ffa657'),
-    ]
-
-    for ax, (series, label, cor) in zip(axes, configs):
-        ax.hist(series, bins=40, color=cor, alpha=0.85, edgecolor='none')
-        ax.axvline(series.mean(),   color='#f78166', linewidth=1.5,
-                   linestyle='--', label=f'Média {series.mean():.1f}')
-        ax.axvline(series.median(), color='#d2a8ff', linewidth=1.5,
-                   linestyle=':',  label=f'Mediana {series.median():.1f}')
-        estilizar_ax2d(ax, label, label, 'Frequência')
-        legend = ax.legend(fontsize=7, framealpha=0.3,
-                           facecolor='#161b22', edgecolor='#30363d')
-        for t in legend.get_texts():
-            t.set_color('#e6edf3')
-
-    plt.tight_layout()
-    plt.show()
-
-
-# ---------------------------------------------------------------
-# Gráfico 5 — Dashboard: scatter 2D entre todos os pares + hist diagonal
-# ---------------------------------------------------------------
-def abrir_grafico_5(event=None):
-    fig = plt.figure(figsize=(13, 11), num='[5] Dashboard Comparativo')
-    fig.patch.set_facecolor('#0d1117')
-    fig.suptitle('Dashboard Comparativo — vmCloud Analytics',
-                 color='#58a6ff', fontsize=14, fontweight='bold', y=0.99)
-
-    cols  = ['cpu_usage', 'network_traffic', 'execution_time']
-    nomes = ['CPU Usage (%)', 'Network Traffic (MB)', 'Execution Time (s)']
-    cores = ['#58a6ff', '#3fb950', '#ffa657']
-    n     = len(cols)
-
-    gs = gridspec.GridSpec(n, n, figure=fig, hspace=0.35, wspace=0.3)
-
-    for i in range(n):
-        for j in range(n):
-            ax = fig.add_subplot(gs[i, j])
-            ax.set_facecolor('#161b22')
-
-            if i == j:
-                # Diagonal — histograma da variável
-                ax.hist(df_plot[cols[i]], bins=30,
-                        color=cores[i], alpha=0.85, edgecolor='none')
-                ax.set_title(nomes[i], color='#e6edf3', fontsize=8,
-                             fontweight='bold')
-            else:
-                # Fora da diagonal — scatter entre par (i, j)
-                # Cor do ponto = valor da variável j (gradiente)
-                vals = df_plot[cols[j]].values
-                norm = plt.Normalize(vals.min(), vals.max())
-                ax.scatter(df_plot[cols[j]], df_plot[cols[i]],
-                           c=vals, cmap='viridis', norm=norm,
-                           s=8, alpha=0.5, edgecolors='none')
-                if i == n - 1:
-                    ax.set_xlabel(nomes[j], color='#8b949e', fontsize=7)
-                if j == 0:
-                    ax.set_ylabel(nomes[i], color='#8b949e', fontsize=7)
-
-            ax.tick_params(colors='#8b949e', labelsize=6)
-            ax.spines['bottom'].set_color('#30363d')
-            ax.spines['left'].set_color('#30363d')
-            ax.spines['top'].set_color('#30363d')
-            ax.spines['right'].set_color('#30363d')
-            ax.grid(True, alpha=0.25)
-
-    fig.text(0.5, 0.01,
-             'Diagonal = distribuição individual  •  Fora da diagonal = relação entre pares  •  cor = valor do eixo X',
-             ha='center', fontsize=8, color='#484f58')
-    plt.show()
-
-
 # -- Janela principal com menu de navegação
 fig_menu = plt.figure(figsize=(10, 6), num='vmCloud — Visualizador Interativo')
 fig_menu.patch.set_facecolor('#0d1117')
@@ -265,8 +180,6 @@ botoes_info = [
     ('1', 'Scatter 3D  (cor = Tempo)',     'grafico_1'),
     ('2', 'Scatter 3D  (cor = CPU)',        'grafico_2'),
     ('3', 'Superfície: CPU × Rede → Tempo', 'grafico_3'),
-    ('4', 'Distribuições das Variáveis',    'grafico_4'),
-    ('5', 'Dashboard Comparativo',          'grafico_5'),
 ]
 
 BOTOES_AX  = {}
@@ -293,8 +206,6 @@ ax_info.text(0.5, 0.5,
 BOTOES_OBJ['grafico_1'].on_clicked(abrir_grafico_1)
 BOTOES_OBJ['grafico_2'].on_clicked(abrir_grafico_2)
 BOTOES_OBJ['grafico_3'].on_clicked(abrir_grafico_3)
-BOTOES_OBJ['grafico_4'].on_clicked(abrir_grafico_4)
-BOTOES_OBJ['grafico_5'].on_clicked(abrir_grafico_5)
 
 # -- Resumo estatístico no terminal
 print("=" * 55)
