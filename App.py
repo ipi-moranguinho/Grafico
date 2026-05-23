@@ -1,8 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from matplotlib.widgets import Button
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import os
 
@@ -50,27 +47,30 @@ Z = df_plot['execution_time'].values
 
 # -- Estiliza eixos 3D
 def estilizar_ax3d(ax, titulo, xlabel, ylabel, zlabel):
-    ax.set_title(titulo, color='#e6edf3', fontsize=10, pad=10, fontweight='bold')
-    ax.set_xlabel(xlabel, color='#8b949e', fontsize=8, labelpad=6)
-    ax.set_ylabel(ylabel, color='#8b949e', fontsize=8, labelpad=6)
-    ax.set_zlabel(zlabel, color='#8b949e', fontsize=8, labelpad=6)
-    ax.tick_params(colors='#8b949e', labelsize=7)
+    ax.set_title(titulo, color='#e6edf3', fontsize=14, pad=18, fontweight='bold')
+    ax.set_xlabel(xlabel, color='#8b949e', fontsize=10, labelpad=10)
+    ax.set_ylabel(ylabel, color='#8b949e', fontsize=10, labelpad=10)
+    ax.set_zlabel(zlabel, color='#8b949e', fontsize=10, labelpad=10)
+    ax.tick_params(colors='#8b949e', labelsize=9)
     ax.xaxis.pane.fill = False
     ax.yaxis.pane.fill = False
     ax.zaxis.pane.fill = False
     ax.xaxis.pane.set_edgecolor('#21262d')
     ax.yaxis.pane.set_edgecolor('#21262d')
     ax.zaxis.pane.set_edgecolor('#21262d')
-    ax.grid(True, alpha=0.3)
+    ax.xaxis._axinfo['grid']['color'] = '#2f363f'
+    ax.yaxis._axinfo['grid']['color'] = '#2f363f'
+    ax.zaxis._axinfo['grid']['color'] = '#2f363f'
+    ax.grid(True, linestyle='--', linewidth=0.4, alpha=0.6)
 
 
-# -- Estiliza eixos 2D
+# -- Estiliza eixos 2D (mantido para uso futuro)
 def estilizar_ax2d(ax, titulo, xlabel, ylabel):
-    ax.set_title(titulo, color='#e6edf3', fontsize=9, fontweight='bold', pad=8)
-    ax.set_xlabel(xlabel, color='#8b949e', fontsize=8)
-    ax.set_ylabel(ylabel, color='#8b949e', fontsize=8)
-    ax.tick_params(colors='#8b949e', labelsize=7)
-    ax.grid(True, alpha=0.3)
+    ax.set_title(titulo, color='#e6edf3', fontsize=10, fontweight='bold', pad=12)
+    ax.set_xlabel(xlabel, color='#8b949e', fontsize=9)
+    ax.set_ylabel(ylabel, color='#8b949e', fontsize=9)
+    ax.tick_params(colors='#8b949e', labelsize=8)
+    ax.grid(True, color='#2f363f', linestyle='--', linewidth=0.4, alpha=0.6)
 
 
 # ---------------------------------------------------------------
@@ -78,143 +78,49 @@ def estilizar_ax2d(ax, titulo, xlabel, ylabel):
 #   Cor do ponto proporcional ao tempo de execução (escala viridis)
 # ---------------------------------------------------------------
 def abrir_grafico_1(event=None):
-    fig = plt.figure(figsize=(11, 8), num='[1] CPU × Tráfego × Tempo de Execução (3D)')
+    fig = plt.figure(figsize=(11, 8), num='vmCloud 3D — CPU × Rede × Tempo')
     fig.patch.set_facecolor('#0d1117')
-    ax  = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection='3d')
 
     norm = plt.Normalize(Z.min(), Z.max())
-    sc   = ax.scatter(X, Y, Z, c=Z, cmap='viridis', norm=norm,
-                      s=20, alpha=0.75, edgecolors='none', depthshade=True)
+    sc = ax.scatter(
+        X, Y, Z,
+        c=Z, cmap='viridis', norm=norm,
+        s=48, alpha=0.9, edgecolors='none', depthshade=True
+    )
 
-    cbar = fig.colorbar(sc, ax=ax, shrink=0.5, pad=0.1)
-    cbar.set_label('Execution Time (s)', color='#8b949e', fontsize=8)
-    plt.setp(cbar.ax.yaxis.get_ticklabels(), color='#8b949e', fontsize=7)
+    cbar = fig.colorbar(sc, ax=ax, shrink=0.55, pad=0.08)
+    cbar.outline.set_edgecolor('#30363d')
+    cbar.set_label('Tempo de Execução (s)', color='#8b949e', fontsize=10)
+    plt.setp(cbar.ax.yaxis.get_ticklabels(), color='#8b949e', fontsize=8)
 
-    estilizar_ax3d(ax,
-                   'CPU × Tráfego de Rede × Tempo de Execução\n(cor = tempo de execução)',
-                   'CPU Usage (%)', 'Network Traffic (MB)', 'Execution Time (s)')
+    ax.view_init(elev=28, azim=-60)
 
-    fig.text(0.5, 0.02, 'Arraste para girar  •  Scroll para zoom',
-             ha='center', fontsize=8, color='#484f58')
-    plt.tight_layout()
+    estilizar_ax3d(
+        ax,
+        'Tempo de Execução em função de CPU e Tráfego de Rede',
+        'Uso da CPU (%)', 'Tráfego de Rede (MB)', 'Tempo de Execução (s)'
+    )
+
+    fig.suptitle('vmCloud — Visualização 3D dos Dados', color='#58a6ff', fontsize=18, fontweight='bold', y=0.95)
+    fig.text(
+        0.5, 0.02,
+        'Pontos reais do dataset vmCloud — sem interpolação',
+        ha='center', fontsize=9, color='#8b949e'
+    )
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.93])
     plt.show()
 
-
-# ---------------------------------------------------------------
-# Gráfico 2 — Scatter 3D: CPU × Tráfego × Tempo
-#   Cor do ponto proporcional ao CPU usage (escala plasma)
-# ---------------------------------------------------------------
-def abrir_grafico_2(event=None):
-    fig = plt.figure(figsize=(11, 8), num='[2] Intensidade de CPU no espaço 3D')
-    fig.patch.set_facecolor('#0d1117')
-    ax  = fig.add_subplot(111, projection='3d')
-
-    norm = plt.Normalize(X.min(), X.max())
-    sc   = ax.scatter(X, Y, Z, c=X, cmap='plasma', norm=norm,
-                      s=20, alpha=0.75, edgecolors='none', depthshade=True)
-
-    cbar = fig.colorbar(sc, ax=ax, shrink=0.5, pad=0.1)
-    cbar.set_label('CPU Usage (%)', color='#8b949e', fontsize=8)
-    plt.setp(cbar.ax.yaxis.get_ticklabels(), color='#8b949e', fontsize=7)
-
-    estilizar_ax3d(ax,
-                   'Intensidade de CPU\nno espaço 3D (cor = CPU %)',
-                   'CPU Usage (%)', 'Network Traffic (MB)', 'Execution Time (s)')
-
-    fig.text(0.5, 0.02, 'Arraste para girar  •  Scroll para zoom',
-             ha='center', fontsize=8, color='#484f58')
-    plt.tight_layout()
-    plt.show()
-
-
-# ---------------------------------------------------------------
-# Gráfico 3 — Superfície interpolada: CPU × Tráfego → Tempo
-# ---------------------------------------------------------------
-def abrir_grafico_3(event=None):
-    from scipy.interpolate import griddata
-
-    fig = plt.figure(figsize=(11, 8), num='[3] Superfície: CPU × Tráfego → Tempo')
-    fig.patch.set_facecolor('#0d1117')
-    ax  = fig.add_subplot(111, projection='3d')
-
-    xi = np.linspace(X.min(), X.max(), 60)
-    yi = np.linspace(Y.min(), Y.max(), 60)
-    Xi, Yi = np.meshgrid(xi, yi)
-    Zi = griddata((X, Y), Z, (Xi, Yi), method='cubic')
-
-    surf = ax.plot_surface(Xi, Yi, Zi, cmap='inferno', alpha=0.85,
-                           linewidth=0, antialiased=True)
-
-    # Pontos reais sobrepostos
-    ax.scatter(X, Y, Z, c='#58a6ff', s=4, alpha=0.3, depthshade=False)
-
-    cbar = fig.colorbar(surf, ax=ax, shrink=0.4, pad=0.1)
-    cbar.set_label('Execution Time (s)', color='#8b949e', fontsize=8)
-    plt.setp(cbar.ax.yaxis.get_ticklabels(), color='#8b949e', fontsize=7)
-
-    estilizar_ax3d(ax,
-                   'Superfície Interpolada: Tempo de Execução\nem função de CPU e Tráfego de Rede',
-                   'CPU Usage (%)', 'Network Traffic (MB)', 'Execution Time (s)')
-
-    fig.text(0.5, 0.02, 'Arraste para girar  •  Superfície via scipy griddata  •  pontos azuis = dados reais',
-             ha='center', fontsize=8, color='#484f58')
-    plt.tight_layout()
-    plt.show()
-
-
-# -- Janela principal com menu de navegação
-fig_menu = plt.figure(figsize=(10, 6), num='vmCloud — Visualizador Interativo')
-fig_menu.patch.set_facecolor('#0d1117')
-
-ax_titulo = fig_menu.add_axes([0, 0.6, 1, 0.4])
-ax_titulo.set_axis_off()
-ax_titulo.text(0.5, 0.65, '  vmCloud Analytics', ha='center', va='center',
-               fontsize=26, fontweight='bold', color='#58a6ff',
-               fontfamily='monospace', transform=ax_titulo.transAxes)
-ax_titulo.text(0.5, 0.25,
-               f'Dataset filtrado: {len(df):,} registros  •  3 variáveis: CPU, Rede, Tempo',
-               ha='center', va='center', fontsize=11, color='#8b949e',
-               transform=ax_titulo.transAxes)
-
-botoes_info = [
-    ('1', 'Scatter 3D  (cor = Tempo)',     'grafico_1'),
-    ('2', 'Scatter 3D  (cor = CPU)',        'grafico_2'),
-    ('3', 'Superfície: CPU × Rede → Tempo', 'grafico_3'),
-]
-
-BOTOES_AX  = {}
-BOTOES_OBJ = {}
-
-for i, (num, label, key) in enumerate(botoes_info):
-    col = i % 3
-    row = i // 3
-    ax_b = fig_menu.add_axes([0.06 + col * 0.31, 0.32 - row * 0.22, 0.28, 0.14])
-    btn  = Button(ax_b, f'  [{num}]  {label}', color='#161b22', hovercolor='#1f6feb')
-    btn.label.set_fontsize(9)
-    btn.label.set_color('#e6edf3')
-    btn.label.set_fontfamily('monospace')
-    BOTOES_AX[key]  = ax_b
-    BOTOES_OBJ[key] = btn
-
-ax_info = fig_menu.add_axes([0, 0, 1, 0.08])
-ax_info.set_axis_off()
-ax_info.text(0.5, 0.5,
-             'Clique em um gráfico para abrir  •  Gráficos 3D são giráveis com o mouse',
-             ha='center', va='center', fontsize=8, color='#484f58',
-             transform=ax_info.transAxes)
-
-BOTOES_OBJ['grafico_1'].on_clicked(abrir_grafico_1)
-BOTOES_OBJ['grafico_2'].on_clicked(abrir_grafico_2)
-BOTOES_OBJ['grafico_3'].on_clicked(abrir_grafico_3)
 
 # -- Resumo estatístico no terminal
 print("=" * 55)
 print("  vmCloud Analytics — Estatísticas Rápidas")
 print("=" * 55)
 for col, nome in [
-    ('cpu_usage',       'CPU Usage (%)        '),
-    ('network_traffic', 'Network Traffic (MB) '),
-    ('execution_time',  'Execution Time (s)   '),
+    ('cpu_usage',       'Uso da CPU (%)        '),
+    ('network_traffic', 'Tráfego de Rede (MB) '),
+    ('execution_time',  'Tempo de Execução (s)   '),
 ]:
     s = df[col]
     print(f"  {nome}  média={s.mean():.2f}  std={s.std():.2f}  "
@@ -223,6 +129,6 @@ print("=" * 55)
 print(f"  Registros totais : {len(df):,}")
 print(f"  Amostra no plot  : {len(df_plot):,}")
 print("=" * 55)
-print("\n  › Menu aberto. Clique em um botão para abrir o gráfico.\n")
+print("\n  › Exibindo apenas o scatter 3D dos dados.\n")
 
-plt.show()
+abrir_grafico_1()
